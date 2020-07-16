@@ -24,12 +24,14 @@ SMAWK algorithm とは、totally monotone な $H \times W$ 行列 $f$ に対し�
 
 ### 準備
 
-totally monotone の定義について。$H, W$ は自然数とし $A$ は全順序集合とする。$H \times W$ の行列 $f : H \times W \to A$ が totally monotone であるとは、$f$ の任意の $2 \times 2$ 部分行列 $\begin{pmatrix} a & b \\ c & d \end{pmatrix}$ が $c \lt d$ ならば $a \lt b$ を満たしかつ $c = d$ ならば $a \le b$ を満たすこと。
+totally monotone の定義について。$H, W$ は自然数とし $A$ は全順序集合とする。$H \times W$ の行列 $f : H \times W \to A$ が totally monotone であるとは、$f$ の任意の $2 \times 2$ 部分行列 $\begin{pmatrix} a & b \\\\ c & d \end{pmatrix}$ が $c \lt d$ ならば $a \lt b$ を満たしかつ $c = d$ ならば $a \le b$ を満たすこと。
 この定義は次と等しい: $f$ の任意の部分行列が monotone であること。
-また、monotone の定義については [[/monotone minima]] を参照してほしい。
+<!-- monotone の定義 -->
 
 totally monotone の性質について確認しておく。
-totally でない monotone であれば言えることとして「$x \in \mathrm{argmin} _ x f(y, x)$ ならば、座標 $(y, x)$ の右上 ($y \le y'$ かつ $x' \le x$ かつ $(y', x') \ne (y, x)$ な位置 $(y', x')$) と左下 (同様) には最小値はないと仮定してよい」がある。
+totally でない monotone であれば言えることとして「$x \in \mathrm{argmin} _ x f(y, x)$ ならば、座標 $(y, x)$ の右上 ($y' \le y$ かつ $x \le x'$ かつ $(y', x') \ne (y, x)$ な位置 $(y', x')$) と左下 ($y \le y'$ かつ $x' \le x$ かつ $(y', x') \ne (y, x)$ な位置 $(y', x')$) には最小値はないと仮定してよい」がある。
+<!-- y 軸と x 軸をどのイメージで取っているか分からないのですが、y 座標が等しい点を行とすると y <= y' x' <= x は「右上」ではなさそうです
+また、x 座標の方は <= ではなく < になるはず (単調増加ではなく単調非減少なので) -->
 totally monotone であればこれをさらに強めて「$x \lt x'$ な $x'$ が存在し $f(y, x) \le f(y, x')$ ならば、座標 $(y, x)$ の右上 ($y \le y'$ かつ $x' \le x$ かつ $(y', x') \ne (y, x)$ な位置 $(y', x')$) には最小値はないと仮定してよい」および「$x' \lt x$ な $x'$ が存在し $f(y, x - 1) \ge f(y, x)$ ならば、座標 $(y, x)$ の左下には最小値はないと仮定してよい」が言える。
 この性質は後述の Reduce ステップと Interpolate ステップで用いられる。
 また、monotone では任意の行を削除しても monotone が保たれるが、列を削除すると monotone でなくなる可能性があった。一方で、totally monotone は任意の行や列を削除しても totally monotone が保たれる。
@@ -44,9 +46,12 @@ SMAWK algorithm の具体的な手順は以下のようになる。
 1.  Initialize
     1.  行の集合 $\mathrm{row} = \lbrace 0, 1, \dots, H - 1 \rbrace$ を用意する。
     1.  列の集合 $\mathrm{col} = \lbrace 0, 1, \dots, W - 1 \rbrace$ を用意する。
+<!-- row と col が直後の Reduce でしか使われていないのでなくしても良さそうです -->
 1.  Reduce
-    1.  行の集合 $\mathrm{row}$ のうちから偶数行目だけを選んで、$\mathrm{row}' \subseteq \mathrm{row}$ を得る。このとき $vert \mathrm{row}' \vert \le H/2$ である。
+    1.  行の集合 $\mathrm{row}$ のうちから偶数行目だけを選んで、$\mathrm{row}' \subseteq \mathrm{row}$ を得る。このとき $\vert \mathrm{row}' \vert \le \lceil H/2 \rceil$ である。
     1.  列の集合 $\mathrm{col}$ のうちから最小値を含まないと仮定してよい列を削除して、残された列の集合 $\mathrm{col}' \subseteq \mathrm{col}$ を得る。このとき $\vert \mathrm{col}' \vert \le H$ である。(詳細は後述)
+<!-- row' において最小値を含まない列は全部捨ててもよくて、そうすると col' < H/2 まで削減できます
+これはやや混乱を起こすかもしれないので、i と ii を交換するのはどうでしょうか -->
 1.  Recursion
     1.  行列 $f$ を $\mathrm{row}'$ に含まれる行と $\mathrm{col}'$ に含まれる列に制限してできる行列を $f'$ とする。totally monotone の性質から、この $f'$ も totally monotone である。これに対し再帰的に最小値の位置をすべて求める。
 1.  Interpolate
@@ -64,6 +69,7 @@ Reduce ステップについて。
         -   $f(y, S_y) \ge f(y, x)$ ならば、$S_y \gets x$ と更新する。
         -   $f(y, S_y) \lt f(y, x)$ ならば、$y \gets y + 1$ と更新し、$y = H$ になれば $S_y \gets x$ と初期化する。
 1.  $\mathrm{col}' = \lbrace S_y \mid y \rbrace$ とする。
+<!-- アルゴリズムに誤りがありそうです -->
 
 こうして得られる $\mathrm{col}'$ には「$\mathrm{col}'$ に含まれない列には最小値はない (と見なせる)」という性質が成り立つ。
 なぜなら、ループの過程においてある列が削除されるのはその列が列 $S_y$ であり、$f(y, S_y) \ge f(y, x)$ が見つかったときのみであり、これについて以下が言えるためである。
@@ -76,6 +82,7 @@ Reduce ステップについて。
 Interpolate ステップについて。
 行 $y - 1$ の最小値の位置 (のひとつ) $x _ {y-1} \in \mathrm{argmin} _ x f(y, x)$ と行 $y + 1$ の最小値の位置 (のひとつ) $x _ {y-1} \in \mathrm{argmin} _ x f(y, x)$ が分かっているとき、行 $y$ の最小値の位置 (のひとつ) $x _ y \in \mathrm{argmin} _ x f(y, x)$ を求めることを考える。
 (totally) monotone という仮定から、$x _ {y-1} \le x _ y \le x _ {y+1}$ であると仮定してよい。これにより $f(y, x _ {y-1}), f(y, x _ {y - 1} + 1), \dots, f(y, x _ {y + 1})$ のみを調べれば最小値の位置 $x_y$ が見付かる。
+<!-- x_{y-1} <= x_{y+1} は厳密には totally monotone 性だけでは保証できないはずで（例えばすべての要素が等しい行列）、再帰的に SMAWK を適用する都合上ではないでしょうか -->
 最小値の位置が分かっていないすべての $y$ についてこれを行なうことを考えると、調べる必要があるのはたとえば $H$ が偶数なら $f(1, x_0), f(1, x_0 + 1), \dots, f(1, x_2); f(3, x_2), f(3, x_2 + 1), \dots, f(3, x_4); \dots; f(H-1, x _ {H-2}), f(H-1, x _ {H-2} + 1), \dots, f(H-1, W-1)$ であり、調べる必要がある位置は $H + W$ 個で抑えられる。
 よって、偶数行目の最小値の位置から奇数行目の最小値の位置を $O(H + W)$ で復元できる。
 
